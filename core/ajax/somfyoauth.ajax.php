@@ -39,7 +39,7 @@ try {
         }
         ajax::success($return);
     }
-    // action qui permet d'effectuer la sauvegarde des donéée en asynchrone
+    // action qui permet d'effectuer la sauvegarde des donées en asynchrone
     if (init('action') == 'saveStack') {
         $params = init('params');
         ajax::success(apiai::saveStack($params));
