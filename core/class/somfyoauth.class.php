@@ -270,6 +270,7 @@ class somfyoauth extends eqLogic {
 			$logicId = $device['id'];
 			$eqLogic = eqLogic::byLogicalId($logicId, 'somfyoauth');
 			if (!is_object($eqLogic)) {
+				log::add('somfyoauth', 'debug', 'is object');
 				$eqLogic = self::createEqFromSomfy($device);
 				foreach($device['capabilities'] as $capability) {
 					self::createCapabilityCommand ($eqLogic, $capability);
