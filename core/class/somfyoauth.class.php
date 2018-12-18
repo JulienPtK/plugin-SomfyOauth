@@ -77,11 +77,11 @@ class somfyoauth extends eqLogic {
 				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 			} 
 			 
-			if ( ! $result = curl_exec($ch)) { 
+			if ( !$result = curl_exec($ch)) { 
 				log::add('somfyoauth', 'debug', 'erreur résultat');
 				trigger_error(curl_error($ch)); 
 			} 
-
+					
 			curl_close ($ch);  
 			log::add('somfyoauth', 'debug', 'Fin de lexecution de la requete sur l API SOMFY. Résultat : ');
 			log::add('somfyoauth', 'debug', print_r($result, true));
@@ -143,13 +143,17 @@ class somfyoauth extends eqLogic {
 
 		$actionCommand->setEqLogic_id($eqLogic->getId());
 		$actionCommand->setType('action');
-		if (isset($capability['parameters']) && $capability['parameters']['name'] == 'position' && $capability['parameters']['type'] == 'integer') {
-			$actionCommand->setSubType('slider');
+		$results = print_r($capability, true);
+		log::add('somfyoauth', 'debug', 'list param' . $results);
+		if (!empty($capability['parameters'])) {
+				$actionCommand->setSubType('slider');
+				log::add('somfyoauth', 'debug', 'add parameters slider');
 		} else {
 			$actionCommand->setSubType('other');
+			log::add('somfyoauth', 'debug', 'add parameters other');
 		}
 		$actionCommand->save();	 
-		log::add('somfyoauth', 'debug', 'Création de la commande Action' . $capability['name']);
+		log::add('somfyoauth', 'debug', 'Création de la commande Action ' . $capability['name']);
 		
 	}
 	
@@ -270,7 +274,6 @@ class somfyoauth extends eqLogic {
 			$logicId = $device['id'];
 			$eqLogic = eqLogic::byLogicalId($logicId, 'somfyoauth');
 			if (!is_object($eqLogic)) {
-				log::add('somfyoauth', 'debug', 'is object');
 				$eqLogic = self::createEqFromSomfy($device);
 				foreach($device['capabilities'] as $capability) {
 					self::createCapabilityCommand ($eqLogic, $capability);
@@ -311,6 +314,15 @@ class somfyoauth extends eqLogic {
 		
 		$urlExec = 'https://api.somfy.com/api/v1/device/'. $deviceId .'/exec';
 
+		if(isset($parameters['slider'])) {
+			$parameters = array(
+				name => 'position',
+				value => intval($parameters['slider']),
+			);
+		} else {
+			$parameters = array();
+		}
+		
         $data = [
             "name" => $commandName,
             "parameters" => $parameters
@@ -321,6 +333,9 @@ class somfyoauth extends eqLogic {
 			CURLOPT_POST => 1,
 			CURLOPT_POSTFIELDS => $jsonDataEncoded
 		);
+
+		$req = print_r($paramsQuery,true);
+		log::add('somfyoauth', 'debug', 'Requete Params :' . $req);
 
 		$result = self::executeQuery($urlExec, $paramsQuery);
    		log::add('somfyoauth', 'debug', 'Fin requete ');
@@ -350,7 +365,7 @@ class somfyoauthCmd extends cmd {
 	   	$eqLogic = $this->getEqLogic();
 	   	$eqId = $eqLogic->getLogicalId();
 
-	   	return $eqLogic->executeCommandOnDevice($eqId, $this->getLogicalId());
+	   	return $eqLogic->executeCommandOnDevice($eqId, $this->getLogicalId(), $_options);
     }
 
 }
